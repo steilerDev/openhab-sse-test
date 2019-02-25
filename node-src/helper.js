@@ -32,7 +32,7 @@ class OpenHAB {
         return response.statusCode === 200;
     }
 
-    sendCommand(habItem, command, callback) {
+    sendCommand(habItem, command) {
         let myURL = this._getURL(`/rest/items/${habItem}`);
         request({
                 url: myURL,
@@ -41,13 +41,13 @@ class OpenHAB {
             },
             function(error, response) {
                 if(error) {
-                    callback(error);
+                    console.error(`Unable to send command to ${habItem}: ${error}`);
                 } else if (response.statusCode === 404) {
-                    callback(new Error(`Item does not exist!`));
+                    console.error(`Unable to send command to ${habItem}: Item does not exist (404)`);
                 } else if (response.statusCode === 400) {
-                    callback(new Error(`Item command null`));
+                    console.error(`Unable to send command to ${habItem}: Item command null (400)`);
                 } else {
-                    callback(null);
+                    console.log(`Send command ${command} to ${habItem}`);
                 }
             })
     }
@@ -56,92 +56,42 @@ class OpenHAB {
         this._log.info(`Syncing all items & types from openHAB`);
         let myURL = this._getURL(`/rest/items`, `recursive=false&fields=name%2Ctype`);
         const response = syncRequest('GET', myURL);
+        let habItems = [];
         if (response.statusCode !== 200) {
             return new Error(`Unable to get items: HTTP code ${response.statusCode}!`);
         } else {
             const items = JSON.parse(response.body);
             if(items.length > 0) {
                 this._log.debug(`Got array with ${items.length} item/s`);
-
                 items.forEach(function(item) {
-                    if(item.type.includes(":")) {
-                        if(item.type.startsWith("Number")) {
-                            this._log.debug(`Item ${item.name} is a number with unit measurements (${item.type}), dropping unit and adding to type cache`);
-                            this._typeCache.set(item.name, "Number");
-                        } else {
-                            this._log.debug(`Item ${item.name} seems to have a unit measurement (${item.type}), but is not a number, adding to type cache!`);
-                            this._typeCache.set(item.name, item.type);
-                        }
+                    if(item.type === "Switch") {
+                        this._log.info(`Adding Switch ${item.name}`);
+                        habItems.push(item.name);
                     } else {
-                        this._log.debug(`Got item ${item.name} of type ${item.type}, adding to type cache`);
-                        this._typeCache.set(item.name, item.type);
+                        this._log.warn(`Not adding ${item.type} ${item.name}, because only switches are supported in this PoC`);
                     }
                 }.bind(this));
             } else {
                 this._log.error(`Received no items from openHAB, unable to sync types!`);
             }
         }
+        return habItems;
     }
 
-    syncItemValues() {
-        this._log.info(`Syncing all item values from openHAB`);
-        let myURL = this._getURL(`/rest/items`, `recursive=false&fields=name%2Cstate`);
-        const response = syncRequest('GET', myURL);
-        if (response.statusCode !== 200) {
-            return new Error(`Unable to get item values: HTTP code ${response.statusCode}!`);
-        } else {
-            const items = JSON.parse(response.body);
-            if(items.length > 0) {
-                this._log.debug(`Got array with ${items.length} item/s`);
-                items.forEach(function(item) {
-                    if(this._subscriptions[item.name] !== undefined) {
-
-
-
-
-
-
-                        this._log.debug(`Got item ${item.name} with value ${item.state}, adding to value cache`);
-                        this._valueCache.set(item.name, item.state);
-                    } else {
-                        this._log.debug(`Got item ${item.name} with value ${item.state}, not adding to value cache, since it is not linked to homebridge!`);
-                    }
-                }.bind(this));
-            } else {
-                this._log.error(`Received no items from openHAB, unable to sync states!`);
-            }
-        }
-    }
-
-
-    subscribe(habItem, callback) {
-        if(!this._subscriptions[habItem]) {
-            this._subscriptions[habItem] = [];
-        }
-        this._log.debug(`Queueing subscription for ${habItem}`);
-        this._subscriptions[habItem].push(callback);
-    }
-
-    startSubscription() {
-        let myURL = this._getURL('/rest/events',`topics=smarthome/items/`);
+    startSubscriptionForItem(habItem) {
         const CLOSED = 2;
 
-        let source = new EventSource(myURL);
+        let url = this._getURL('/rest/events',`topics=smarthome/items/${key}/statechanged`);
+
+        this._log.debug(`Starting subscription for ${habItem} with ${callbacks.length} subscribed characteristic(s)`);
+        let source = new EventSource(url);
+
         source.onmessage = function (eventPayload) {
             let eventData = JSON.parse(eventPayload.data);
             if (eventData.type === "ItemStateChangedEvent") {
                 let item = eventData.topic.replace("smarthome/items/", "").replace("/statechanged", "");
                 let value = JSON.parse(eventData.payload).value;
-
-                if(this._subscriptions[item] !== undefined) {
-                    this._log.debug(`Received new state for item ${item}: ${value}`);
-                    this._valueCache.set(item, value);
-                    this._subscriptions[item].forEach(function(callback){
-                        callback(value, item);
-                    });
-                } else {
-                    this._log.debug(`Ignoring new state for item ${item} (${value}), because it is not registered with homebridge`);
-                }
+                this._log.info(`Received new state for item ${item}: ${value}`);
             }
         }.bind(this);
         source.onerror = function (err) {
@@ -153,11 +103,11 @@ class OpenHAB {
                     msg = err.message;
                 }
                 if (source.readyState === CLOSED || err.status === 404) {
-                    msg = `Subscription service closed, trying to reconnect in 1sec...`;
+                    msg = `Subscription closed for ${habItem} (${err.message}), trying to reconnect in 1sec...`;
                     setTimeout(function () {
-                        this._log.warn(`Trying to reconnect subscription service...`);
+                        this._log.warn(`Trying to reconnect subscription for ${habItem}...`);
                         source.close();
-                        this.startSubscription();
+                        this.startSubscriptionForItem(habItem);
                     }.bind(this), 1000);
                 }
                 this._log.error(msg);
