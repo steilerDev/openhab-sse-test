@@ -6,3 +6,5 @@ The `docker-compose.yml` describes two containers:
   
   
 During startup there will be some `ECONNREFUSED` or `503`, just wait a bit until the host is online.
+
+OpenHAB does not log into stdout of docker-compose, therefore you have to manually examine the output through `./openhab/userdata/logs/openhab.log`
