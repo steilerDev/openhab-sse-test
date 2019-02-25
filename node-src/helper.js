@@ -86,7 +86,7 @@ class OpenHAB {
     startSubscriptionForItem(habItem) {
         const CLOSED = 2;
 
-        let url = this._getURL('/rest/events',`topics=smarthome/items/${key}/statechanged`);
+        let url = this._getURL('/rest/events',`topics=smarthome/items/${habItem}/statechanged`);
 
         this._log.debug(`Starting subscription for ${habItem} with ${callbacks.length} subscribed characteristic(s)`);
         let source = new EventSource(url);
