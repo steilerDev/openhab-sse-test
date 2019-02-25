@@ -1,5 +1,6 @@
 .idea/
 node-src/package-lock.json
+node-src/node_modules
 openhab/userdata/logs/
 openhab/userdata/jsondb/backup/
 openhab/userdata/cache/
