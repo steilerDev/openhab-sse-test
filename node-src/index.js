@@ -4,10 +4,6 @@ const sleep = require('sleep');
 const minTimeBetweenCommands = 30 * 1000; // 30sec
 const maxTimeBetweenCommands = 3 * 60 * 1000; // 3 Mins
 
-setTimeout(function () {
-    console.log("Hello world")
-}, 1000);
-
 let openhab = new OpenHAB("http://openhab-sse-test", 8080);
 
 let online = false;

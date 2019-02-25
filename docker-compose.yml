@@ -2,7 +2,7 @@ version: '2.2'
 
 services:
   openhab-sse-test:
-    image: openhab/openhab:latest
+    build: ./openhab/build
     container_name: openhab-sse-test
     volumes:
       - "/etc/localtime:/etc/localtime:ro"
