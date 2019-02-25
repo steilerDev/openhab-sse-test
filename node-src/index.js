@@ -17,7 +17,8 @@ console.log(`openHAB is online`);
 
 let items = openhab.getItems();
 
-for (var i in items) {
+let arrayLength = items.length;
+for (var i = 0; i < arrayLength; i++) {
     let thisItem = items[i];
     console.log(`Starting subscription for ${thisItem}`);
     openhab.startSubscriptionForItem(thisItem);
@@ -25,7 +26,7 @@ for (var i in items) {
 
     (function loop() {
         let rand = Math.round(Math.random() * (maxTimeBetweenCommands - minTimeBetweenCommands)) + minTimeBetweenCommands;
-        console.log(`Starting timeout for ${thisItem} with ${rand} ms`);
+        console.debug(`Starting timeout for ${thisItem} with ${rand} ms`);
         setTimeout(function() {
             openhab.sendCommand(thisItem, "ON");
             setTimeout(function () {
