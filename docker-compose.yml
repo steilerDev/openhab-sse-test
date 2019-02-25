@@ -17,7 +17,6 @@ services:
   node-sse-test:
     image: node:8
     container_name: node-sse-test
-    user: "node"
     working_dir: /home/node/app
     environment:
       NODE_ENV: "production"
