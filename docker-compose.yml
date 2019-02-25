@@ -4,7 +4,6 @@ services:
   openhab-sse-test:
     image: openhab/openhab:latest
     container_name: openhab-sse-test
-    restart: unless-stopped
     volumes:
       - "/etc/localtime:/etc/localtime:ro"
       - "/etc/timezone:/etc/timezone:ro"
