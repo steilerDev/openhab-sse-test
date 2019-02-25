@@ -1,3 +1,6 @@
 .idea/
 node-src/package-lock.json
-userdata/logs/
+openhab/userdata/logs/
+openhab/userdata/jsondb/backup/
+openhab/userdata/cache/
+openhab/userdata/tmp/
