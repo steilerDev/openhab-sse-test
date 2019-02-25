@@ -15,10 +15,8 @@ services:
       OPENHAB_HTTP_PORT: "8080"
       OPENHAB_HTTPS_PORT: "8443"
       EXTRA_JAVA_OPTS: "-Duser.timezone=Europe/Berlin"
-      VIRTUAL_HOST: "test.steilergroup.net"
-      VIRTUAL_PORT: "8080"
   node-sse-test:
-    image: "node:8"
+    image: node:8
     container_name: node-sse-test
     user: "node"
     working_dir: /home/node/app
@@ -26,6 +24,4 @@ services:
       NODE_ENV: "production"
     volumes:
       - ./node-src:/home/node/app
-    expose:
-      - "8081"
     command: "npm start"
