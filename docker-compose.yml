@@ -1,0 +1,26 @@
+version: '2.2'
+
+services:
+  openhab-test:
+    build: ./openhab
+    container_name: openhab-test
+    restart: unless-stopped
+    volumes:
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/etc/timezone:/etc/timezone:ro"
+      - "./openhab/userdata:/openhab/userdata"
+    environment:
+      OPENHAB_HTTP_PORT: "8080"
+      OPENHAB_HTTPS_PORT: "8443"
+      EXTRA_JAVA_OPTS: "-Duser.timezone=Europe/Berlin"
+  node-test:
+    image: "node:8"
+    user: "node"
+    working_dir: /home/node/app
+    environment:
+      - NODE_ENV=production
+    volumes:
+      - ./node-src:/home/node/app
+    expose:
+      - "8081"
+    command: "npm start"
