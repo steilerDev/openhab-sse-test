@@ -1,8 +1,8 @@
 const {OpenHAB} = require('./helper');
 const sleep = require('sleep');
 
-const minTimeBetweenCommands = 30 * 1000; // 30sec
-const maxTimeBetweenCommands = 60 * 1000; // 3 Mins
+const minTimeBetweenCommands = 10 * 60 * 1000; // 10 Mins
+const maxTimeBetweenCommands = 60 * 60 * 1000; // 1 Hr
 
 let openhab = new OpenHAB("http://openhab-sse-test", 8080);
 
